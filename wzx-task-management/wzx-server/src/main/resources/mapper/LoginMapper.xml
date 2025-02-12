@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.wzx.mapper.LoginMapper">
+    <insert id="register">
+        insert into `wyx-missions-management`.user (username, name, password, phone, sex, id_number, create_time, update_time)
+        values (#{username}, #{name}, #{password}, #{phone}, #{sex}, #{idNumber}, #{createTime}, #{updateTime});
+    </insert>
+    <select id="getByUsername" resultType="com.wzx.entity.User">
+        select * from `wyx-missions-management`.user where username = #{username};
+    </select>
+
+</mapper>

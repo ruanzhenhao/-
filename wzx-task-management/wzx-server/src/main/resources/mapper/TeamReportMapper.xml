@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.wzx.mapper.TeamReportMapper">
+    <insert id="createTask"  keyColumn="id" keyProperty="id"  useGeneratedKeys="true">
+        insert into `wyx-missions-management`.task (task_name, demand, create_time, update_time,
+                                                    team_id, update_id, start_time, end_time,
+                                                    create_user_id)
+        value (#{title}, #{contend}, NOW(), now(), #{teamId}, #{loginUserId}
+            , #{startTime}, #{endTime}, #{loginUserId})
+    </insert>
+    <insert id="createTaskUser">
+        insert into `wyx-missions-management`.user_task
+            (task_id, status, update_id, update_time, text, completed_time, team_id, user_id)
+        values
+        <foreach collection="userIds" item="userId" separator=",">
+            (#{taskId}, 1, #{loginUserId}, now(), null, null, #{teamId}, #{userId})
+        </foreach>
+    </insert>
+    <update id="updateTeamName">
+        update `wyx-missions-management`.team set team_name = #{newTeamName} where team_name = #{teamName}
+    </update>
+    <update id="changeIntroduction">
+        update `wyx-missions-management`.team set introduction =#{introduction} where id =#{teamId}
+    </update>
+    <update id="transferBoss">
+        update `wyx-missions-management`.team_user set role = 3 where user_id = #{transferUserId} and team_id = #{teamId}
+     </update>
+    <update id="changeOrdinary">
+        update `wyx-missions-management`.team_user set role = 1 where user_id = #{loginUserId} and team_id = #{teamId}
+    </update>
+    <update id="setAdmin">
+        update `wyx-missions-management`.team_user set role = 2 where user_id = #{transferUserId} and team_id = #{teamId}
+    </update>
+    <update id="removeAdmin">
+        update `wyx-missions-management`.team_user set role = 1 where user_id = #{removeUserId} and team_id = #{teamId}
+    </update>
+    <delete id="deleteTeam">
+        delete from `wyx-missions-management`.team where id = #{teamId}
+    </delete>
+    <delete id="deleteTeamUser">
+        delete from `wyx-missions-management`.team_user where team_id = #{teamId}
+    </delete>
+    <delete id="deleteTeamTask">
+        delete from `wyx-missions-management`.user_task where team_id = #{teamId}
+    </delete>
+    <delete id="quitTeam">
+        delete from `wyx-missions-management`.team_user where user_id = #{loginUserId} and team_id = #{teamId}
+    </delete>
+    <delete id="quitTeamTask">
+        delete from `wyx-missions-management`.user_task where user_id = #{loginUserId} and team_id = #{teamId}
+    </delete>
+    <delete id="deleteUser">
+        delete from `wyx-missions-management`.team_user where team_id = #{teamId} and user_id = #{deleteUserId}
+    </delete>
+    <delete id="deleteUserTask">
+        delete from `wyx-missions-management`.user_task where team_id = #{teamId} and user_id = #{deleteUserId}
+    </delete>
+
+
+    <select id="getTop10Value" resultType="java.lang.Integer">
+        select count(1) from `wyx-missions-management`.user_task where user_id = #{id} and user_task.status = 2
+    </select>
+    <select id="selectTeamID" resultType="java.lang.Long">
+        select id from `wyx-missions-management`.team where team_name =#{teamName}
+    </select>
+    <select id="getTop10Name" resultType="java.lang.String">
+        select u.username,count(user_task.id) as count from `wyx-missions-management`.user_task
+                                                                left join `wyx-missions-management`.task t on t.id = user_task.task_id
+                                                                left join `wyx-missions-management`.user u on u.id = user_task.user_id
+        where t.team_id = #{teamId} and user_task.status = 2 group by u.name, u.id order by count desc limit 10;
+    </select>
+    <select id="getTop10Id" resultType="java.lang.Integer">
+        select u.id,count(user_task.id) as count from `wyx-missions-management`.user_task
+                                                                left join `wyx-missions-management`.task t on t.id = user_task.task_id
+                                                                left join `wyx-missions-management`.user u on u.id = user_task.user_id
+        where t.team_id = #{teamId} and user_task.status = 2 group by u.name, u.id order by count desc limit 10;
+    </select>
+    <select id="getTeamId" resultType="java.lang.Long">
+        select id from `wyx-missions-management`.team where team_name = #{team_name}
+    </select>
+    <select id="getTaskList" resultType="java.lang.Integer">
+        select DISTINCT task_id from `wyx-missions-management`.user_task where team_id =#{teamId}
+    </select>
+    <select id="getTaskName" resultType="java.lang.String">
+        select task_name from `wyx-missions-management`.task where id = #{id}
+    </select>
+    <select id="getCount" resultType="java.lang.Integer">
+        select COUNT(1) from `wyx-missions-management`.user_task where task_id = #{taskId} and status = #{type}
+    </select>
+    <select id="getHumanCount" resultType="java.lang.Integer">
+        select COUNT(1) from `wyx-missions-management`.team
+                                 left join `wyx-missions-management`.team_user tu on team.id = tu.team_id
+                                 left join `wyx-missions-management`.user u on u.id = tu.user_id
+        where team.id = #{teamId} and u.sex = #{sex}
+    </select>
+    <select id="getNoTask" resultType="java.lang.Integer">
+        select count(1) from `wyx-missions-management`.user_task
+        where user_id=#{loginUserId} and team_id = #{teamId} and status=2
+    </select>
+    <select id="getCountTask" resultType="java.lang.Integer">
+        select count(1) from `wyx-missions-management`.user_task
+        where user_id=#{loginUserId} and team_id = #{teamId}
+    </select>
+    <select id="getIntroduction" resultType="java.lang.String">
+        select introduction from `wyx-missions-management`.team where id = #{teamId}
+    </select>
+    <select id="getUserId" resultType="java.lang.Long">
+        select user_id from `wyx-missions-management`.team_user where team_id = #{teamId}
+    </select>
+    <select id="getUser" resultType="com.wzx.dto.TeamUserListDTO">
+        select username,id,img from `wyx-missions-management`.user where id = #{id}
+    </select>
+    <select id="getTeamTaskList" resultType="java.lang.Long">
+        select task_id from `wyx-missions-management`.user_task
+        where user_id = #{loginUserId} and team_id = #{teamId}
+    </select>
+    <select id="getTaskInfo" resultType="com.wzx.dto.TeamTaskListDTO">
+        select demand,id,task_name from `wyx-missions-management`.task where id = #{taskId}
+    </select>
+    <select id="getTaskStatus" resultType="java.lang.String">
+        select status
+        from `wyx-missions-management`.user_task where task_id = #{taskId} and user_id = #{loginUserId}
+
+    </select>
+    <select id="getUserRole" resultType="java.lang.Integer">
+        select role from `wyx-missions-management`.team_user
+        where user_id = #{loginUserId} and team_id = #{teamId}
+    </select>
+    <select id="getInvitationCode" resultType="java.lang.Long">
+        select invitation_code from `wyx-missions-management`.team_invitationcode where team_id = #{teamId} and
+                             #{now} between create_time and validity_time
+    </select>
+
+    <select id="getAdmin" resultType="java.lang.Long">
+        SELECT user_id
+        FROM `wyx-missions-management`.team_user
+        WHERE team_id = #{teamId} AND role >= 2
+        ORDER BY role DESC; -- 或使用 DESC 进行降序排列
+    </select>
+    <select id="getOrdinary" resultType="java.lang.Long">
+        select user_id from `wyx-missions-management`.team_user where team_id = #{teamId} and role = 1
+
+    </select>
+    <select id="getUserData" resultType="com.wzx.vo.AdminVO">
+        select username,img from `wyx-missions-management`.user where id = #{admin}
+    </select>
+    <select id="getOrdinaryData" resultType="com.wzx.vo.OrdinaryVO">
+        select username,img from `wyx-missions-management`.user where id = #{ordinary}
+    </select>
+
+
+</mapper>

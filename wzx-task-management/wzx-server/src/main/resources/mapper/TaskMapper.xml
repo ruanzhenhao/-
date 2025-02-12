@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.wzx.mapper.TaskMapper">
+    <insert id="uploadFile">
+        INSERT INTO `wyx-missions-management`.mission_file_url (task_user_id, file_url, file_name)
+        VALUES
+        <foreach collection="files" item="file" separator=",">
+            (#{file.taskUserId}, #{file.fileName}, #{file.filePath})
+        </foreach>
+    </insert>
+
+    <update id="submitMission">
+        update `wyx-missions-management`.user_task set text = #{text} , status =4 , update_time= NOW()
+        where user_task.user_id = #{userId} and user_task.task_id = #{taskId}
+    </update>
+    <update id="changeType">
+        update `wyx-missions-management`.user_task set completed_time = NOW() ,status = #{type}
+        where  user_task.id = #{taskId}
+    </update>
+
+
+    <select id="getNoTask" resultType="java.lang.Integer">
+        select count(1) from `wyx-missions-management`.user_task
+        where user_task.user_id = #{id} and user_task.status = 1
+    </select>
+    <select id="getTaskType" resultType="java.lang.Integer">
+        select count(1) from `wyx-missions-management`.user_task
+        where user_task.user_id = #{userId} and user_task.status = #{type} and user_task.team_id = #{teamId}
+    </select>
+    <select id="getComplete" resultType="java.lang.Integer">
+        SELECT COUNT(1) AS value
+        FROM `wyx-missions-management`.user_task
+        WHERE user_task.user_id = #{userId}
+        AND user_task.completed_time BETWEEN #{begin} AND #{end}
+        AND user_task.status = 2
+    </select>
+    <select id="getNoTeamTask" resultType="java.lang.Integer">
+        select count(1) from `wyx-missions-management`.user_task
+        where user_task.user_id = #{userId} and user_task.status = 1 and team_id=#{teamId}
+    </select>
+    <select id="getNoTaskType" resultType="java.lang.Integer">
+        select count(1) from `wyx-missions-management`.user_task
+        where user_task.user_id = #{userId} and user_task.status = #{type}
+    </select>
+    <select id="getTeamId" resultType="java.lang.Long">
+        select team_id from `wyx-missions-management`.team_user where
+        user_id = #{loginUserId}
+    </select>
+    <select id="getValidTeamID" resultType="java.lang.Long">
+        select count(1) from `wyx-missions-management`.task left join `wyx-missions-management`.user_task ut on task.id = ut.task_id
+        where curdate() between create_time and end_time
+          and task.team_id = #{id} and ut.user_id = #{loginUserId}  and ut.status = 1
+    </select>
+    <select id="getValidTeam" resultType="java.lang.Object">
+
+    </select>
+    <select id="getBossID" resultType="java.lang.Long">
+        select create_Id from `wyx-missions-management`.team where id =#{id}
+    </select>
+    <select id="getCreateTeamUserId" resultType="com.wzx.vo.TeamByTaskVO">
+        select create_time,team_name from `wyx-missions-management`.team where id = #{id}
+
+    </select>
+    <select id="getTaskID" resultType="java.lang.Long">
+        select task_id from `wyx-missions-management`.task left join `wyx-missions-management`.user_task ut on task.id = ut.task_id
+        where curdate() between create_time and end_time
+          and task.team_id = #{teamId} and ut.user_id = #{loginUserId}  and ut.status = 1
+    </select>
+    <select id="getTaskByTeam" resultType="com.wzx.vo.TaskByTeamVO">
+        select task_name,demand,create_time,end_time from `wyx-missions-management`.task
+        where id = #{taskID}
+    </select>
+    <select id="getTaskInfo" resultType="com.wzx.vo.TaskInfoVO">
+        select task_name,create_time,end_time,demand,create_user_id from `wyx-missions-management`.task where id =#{taskId}
+    </select>
+    <select id="getUserName" resultType="java.lang.String">
+        select username from `wyx-missions-management`.user where id = #{createUserId}
+    </select>
+    <select id="getSetTask" resultType="com.wzx.vo.TaskListVO">
+        select id,task_name from `wyx-missions-management`.task where create_user_id = #{loginUserId}
+    </select>
+    <select id="getTaskTable" resultType="com.wzx.vo.TaskTableVO">
+        select user_task.id,task_name,user_task.update_time as submitTime ,username ,team_name from user_task
+                                                                                         join `wyx-missions-management`.task t on t.id = user_task.task_id
+                                                                                         join `wyx-missions-management`.user u on u.id = user_task.user_id
+                                                                                         join `wyx-missions-management`.team t2 on t2.id = user_task.team_id
+        <where>
+            <if test="taskId!=null">
+                user_task.task_id = #{taskId} and
+            </if>
+            create_user_id = #{loginUserId} and status = 4
+        </where>
+    </select>
+    <select id="getValidUserID" resultType="java.lang.Long">
+        select create_user_id from task where id in (select distinct task_id from user_task where id = #{taskId})
+        </select>
+    <select id="getSubmitInfo" resultType="java.lang.String">
+        select text from `wyx-missions-management`.user_task
+        where user_task.id = #{id}
+    </select>
+    <select id="getSubmitInfoIds" resultType="java.lang.Long">
+        select id from mission_file_url where mission_file_url.task_user_id = #{loginUserId}
+    </select>
+    <select id="getFilePath" resultType="java.lang.String">
+        select mission_file_url.file_url from mission_file_url where id in
+         <foreach collection="ids" item="id" open="(" separator="," close=")">
+             #{id}
+         </foreach>
+    </select>
+
+
+</mapper>

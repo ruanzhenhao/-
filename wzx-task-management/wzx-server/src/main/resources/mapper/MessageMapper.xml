@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.wzx.mapper.MessageMapper">
+
+    <insert id="sendMessage" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `wyx-missions-management`.message
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="createUserID != null">
+                create_user_id,
+            </if>
+            <if test="title != null">
+                title,
+            </if>
+            <if test="content != null">
+                content,
+            </if>
+            <if test="type != null">
+                type,
+            </if>
+            <if test="teamID != null">
+                team_id,
+            </if>
+            <if test="crateTime != null">
+                create_time
+            </if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+            <if test="createUserID != null">
+                #{createUserID},
+            </if>
+            <if test="title != null">
+                #{title},
+            </if>
+            <if test="content != null">
+                #{content},
+            </if>
+            <if test="type != null">
+                #{type},
+            </if>
+            <if test="teamID != null">
+                #{teamID},
+            </if>
+            <if test="crateTime != null">
+                #{crateTime}
+            </if>
+        </trim>
+    </insert>
+    <insert id="sendMessageUser">
+        INSERT INTO `wyx-missions-management`.message_user (user_id, message_id)
+        VALUES
+        <foreach collection="userID" item="userId" separator=",">
+            (#{userId}, #{id})
+        </foreach>
+    </insert>
+    <insert id="yes">
+        insert into `wyx-missions-management`.team_user(user_id, team_id, role)
+        value
+            (#{loginUserId}, #{teamID}, 3)
+
+    </insert>
+    <delete id="no">
+        delete
+        from `wyx-missions-management`.message_user
+        where user_id =#{loginUserId} and message_id=#{id}
+    </delete>
+    <select id="messageTable" resultType="com.wzx.vo.MessageTableVO">
+        select message.id, username as sendUserName , message.create_time createdTime , title, content, type, team_id
+        from `wyx-missions-management`.message left join `wyx-missions-management`.user u on message.create_user_id=u.id
+        where message.id
+                  in (select id from `wyx-missions-management`.message_user where user_id = #{loginUserId})
+    </select>
+</mapper>

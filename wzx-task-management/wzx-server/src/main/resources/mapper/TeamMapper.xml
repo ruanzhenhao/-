@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.wzx.mapper.TeamMapper">
+    <insert id="createTeam" useGeneratedKeys="true" keyProperty="teamId">
+        insert `wyx-missions-management`.team
+            (team_name,introduction,create_time,update_time,create_Id,update_Id)
+        values(#{teamName},#{introduction},
+               #{createTime},#{updateTime},#{loginUserId},#{loginUserId})
+    </insert>
+    <insert id="createTeamUser">
+        insert `wyx-missions-management`.team_user (team_id,user_id,role)
+        values(#{teamId},#{loginUserId},3)
+    </insert>
+    <insert id="insertCode">
+        insert `wyx-missions-management`.team_invitationcode
+        (team_id, invitation_code, validity_time, create_time) VALUE
+        (#{teamId},#{invitationCode},#{validityTime},#{createTime})
+    </insert>
+    <insert id="addCode">
+        insert `wyx-missions-management`.team_invitationcode
+        (team_id, invitation_code, validity_time, create_time) VALUE
+        (#{teamId},#{invitationCode},#{validityTime},#{createTime})
+    </insert>
+    <insert id="insertUser">
+        insert `wyx-missions-management`.team_user (team_id,user_id,role)
+        value (#{teamID},#{loginUserId},1)
+
+    </insert>
+    <insert id="sendInvitation">
+    </insert>
+
+
+    <select id="getTeamList" resultType="com.wzx.vo.TeamListVO">
+        select t.id,team_user.role, t.team_name as TaskName from `wyx-missions-management`.team_user
+            left join `wyx-missions-management`.team t on t.id = team_user.team_id
+        <where>
+            <if test="UserId != null">
+                team_user.user_id = #{UserId}
+            </if>
+        </where>
+    </select>
+    <select id="getCount" resultType="java.lang.Integer">
+        select count(*) from `wyx-missions-management`.team_user
+        where team_id = #{id}
+    </select>
+    <select id="getTop5Name" resultType="java.lang.String">
+        select u.username,count(user_task.id) as count from `wyx-missions-management`.user_task
+                                                                  left join `wyx-missions-management`.task t on t.id = user_task.task_id
+                                                                  left join `wyx-missions-management`.user u on u.id = user_task.user_id
+        where t.team_id = #{teamId} and user_task.status = 2
+          AND user_task.completed_time BETWEEN #{beginDate} AND #{endDate}
+        group by u.name, u.id order by count desc limit 5;
+    </select>
+    <select id="getTop5Value" resultType="java.lang.Integer">
+        select count(user_task.id) as count from `wyx-missions-management`.user_task
+                                                            left join `wyx-missions-management`.task t on t.id = user_task.task_id
+                                                            left join `wyx-missions-management`.user u on u.id = user_task.user_id
+        where t.team_id =  #{teamId}
+          AND user_task.completed_time BETWEEN #{beginDate} AND #{endDate}
+          and user_task.status = 2 group by u.name, u.id order by count desc limit 5;
+    </select>
+    <select id="getUserId" resultType="com.wzx.vo.TeamVO">
+        select user_id  from `wyx-missions-management`.team_user
+        <where>
+            <if test="teamId != null">
+                team_id = #{teamId}
+            </if>
+            <if test="role != null and role!=''">
+                and  role = #{role}
+            </if>
+        </where>
+        limit #{start},#{pageSize}
+    </select>
+    <select id="getRole" resultType="java.lang.Integer">
+        select role from `wyx-missions-management`.team_user
+        where team_id = #{teamId} and user_id = #{userId}
+    </select>
+    <select id="getTeamID" resultType="java.lang.Long">
+        select team_id from `wyx-missions-management`.team_user
+        where user_id = #{loginUserId}
+        limit #{start},#{pageSize}
+
+    </select>
+    <select id="getTeam" resultType="com.wzx.vo.TeamListDataVO">
+        select introduction,team_name from `wyx-missions-management`.team where id = #{teamId}
+    </select>
+    <select id="getTeamCount" resultType="java.lang.Integer">
+        select count(1) from `wyx-missions-management`.team_user
+        where user_id = #{loginUserId}
+    </select>
+    <select id="selectTeamID" resultType="java.lang.Long">
+        select team_id from `wyx-missions-management`.team_user
+        where user_id  = #{userId}
+    </select>
+    <select id="selectIvitationCode" resultType="java.lang.Long">
+        select team_id from `wyx-missions-management`.team_invitationcode
+                 where invitation_code = #{InvitationCode}
+        and curdate() between create_time and validity_time
+    </select>
+    <select id="isTrue" resultType="java.lang.Integer">
+        select COUNT(1) from `wyx-missions-management`.team_user
+        where team_id=#{teamID} and user_id =#{loginUserId}
+    </select>
+
+
+</mapper>
